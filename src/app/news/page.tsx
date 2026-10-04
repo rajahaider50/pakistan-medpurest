@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Calendar, User, Eye, ArrowRight, Tag } from 'lucide-react';
 
@@ -42,8 +42,31 @@ const NEWS_ARTICLES = [
 
 export default function NewsPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'company-news' | 'industry-dynamics'>('all');
+  const [news, setNews] = useState(NEWS_ARTICLES);
 
-  const filteredNews = NEWS_ARTICLES.filter(
+  useEffect(() => {
+    fetch('/api/news')
+      .then(res => res.json())
+      .then(data => {
+        if (data.news && data.news.length > 0) {
+          const mapped = data.news.map((item: any) => ({
+            slug: item.slug,
+            category: item.category || 'company-news',
+            categoryName: item.category === 'company-news' ? 'Company News' : 'Industry Dynamics',
+            title: item.title,
+            excerpt: item.excerpt || '',
+            image: item.cover_image || 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800&q=80',
+            date: item.published_at ? new Date(item.published_at).toLocaleDateString() : 'Recent',
+            author: item.author || 'Pakistan Medical',
+            views: item.views || 0,
+          }));
+          setNews(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredNews = news.filter(
     n => activeTab === 'all' || n.category === activeTab
   );
 

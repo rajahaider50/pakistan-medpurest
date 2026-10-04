@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Play, X, Clock } from 'lucide-react';
 
@@ -30,6 +30,27 @@ const VIDEOS = [
 
 export default function VideoPage() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [videoList, setVideoList] = useState(VIDEOS);
+
+  useEffect(() => {
+    fetch('/api/videos')
+      .then(res => res.json())
+      .then(data => {
+        if (data.videos && data.videos.length > 0) {
+          const mapped = data.videos.map((v: any) => ({
+            title: v.title,
+            desc: v.description || 'Clinical manufacturing and laboratory demonstration video.',
+            duration: v.duration || '03:00',
+            thumbnail: v.thumbnail_url || 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+            videoUrl: v.video_url?.includes('watch?v=') 
+              ? v.video_url.replace('watch?v=', 'embed/') 
+              : v.video_url,
+          }));
+          setVideoList(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
@@ -49,7 +70,7 @@ export default function VideoPage() {
 
       <div className="max-w-7xl mx-auto px-4 pt-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {VIDEOS.map((v, i) => (
+          {videoList.map((v, i) => (
             <div
               key={i}
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition flex flex-col"

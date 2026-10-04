@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Award, Trophy } from 'lucide-react';
 
@@ -29,6 +29,26 @@ const HONORS = [
 ];
 
 export default function HonorPage() {
+  const [honors, setHonors] = useState(HONORS);
+
+  useEffect(() => {
+    fetch('/api/company')
+      .then(res => res.json())
+      .then(json => {
+        if (json.honors && json.honors.length > 0) {
+          const mapped = json.honors.map((h: any) => ({
+            title: h.title,
+            year: h.year,
+            issuer: h.issuer || 'Industry Recognition',
+            desc: h.description,
+            image: h.image_url || 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80',
+          }));
+          setHonors(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       <div className="bg-gradient-to-r from-slate-900 to-brand-950 text-white py-14 border-b border-slate-800">
@@ -57,7 +77,7 @@ export default function HonorPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {HONORS.map((h, i) => (
+          {honors.map((h, i) => (
             <div
               key={i}
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"

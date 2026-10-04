@@ -1,45 +1,82 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronRight, ShieldCheck, Lightbulb, Globe, Leaf } from 'lucide-react';
+import { 
+  ChevronRight, 
+  ShieldCheck, 
+  Lightbulb, 
+  Globe, 
+  Leaf, 
+  HeartHandshake, 
+  Award, 
+  Sparkles, 
+  CheckCircle2,
+  LucideIcon
+} from 'lucide-react';
+
+const ICON_MAP: Record<string, { icon: LucideIcon; color: string }> = {
+  ShieldCheck: { icon: ShieldCheck, color: 'text-brand-700 bg-brand-50 border-brand-200' },
+  Lightbulb: { icon: Lightbulb, color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  Globe: { icon: Globe, color: 'text-sky-600 bg-sky-50 border-sky-200' },
+  Leaf: { icon: Leaf, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  HeartHandshake: { icon: HeartHandshake, color: 'text-rose-600 bg-rose-50 border-rose-200' },
+  Award: { icon: Award, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
+  Sparkles: { icon: Sparkles, color: 'text-purple-600 bg-purple-50 border-purple-200' },
+};
 
 const CULTURE_ITEMS = [
   {
     title: 'Purity & Zero Compromise',
     subtitle: 'Sterility First',
     desc: 'In surgical medicine, perfection is the baseline. Every square millimeter of surgical fabric is subjected to microscopic bioburden and hydrostatic barrier integrity checks.',
-    icon: ShieldCheck,
-    color: 'text-brand-700 bg-brand-50 border-brand-200',
+    iconName: 'ShieldCheck',
     image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Continuous Innovation',
     subtitle: 'R&D Driven',
     desc: 'Investing over 8% of annual revenue into non-woven polymer engineering, microbial barrier breathable membranes, and eco-friendly degradable medical fabrics.',
-    icon: Lightbulb,
-    color: 'text-amber-600 bg-amber-50 border-amber-200',
+    iconName: 'Lightbulb',
     image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Global Responsibility',
     subtitle: 'Patient Safety Above All',
     desc: 'Empowering surgeons, nurses, and clinical teams across 85 nations with protective gear and surgical drape packs they can bet their lives upon.',
-    icon: Globe,
-    color: 'text-sky-600 bg-sky-50 border-sky-200',
+    iconName: 'Globe',
     image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Sustainable Manufacturing',
     subtitle: 'Eco Healthcare',
     desc: 'Transitioning medical secondary packaging to 100% recyclable mono-materials and reducing cleanroom air handling carbon footprint by 35%.',
-    icon: Leaf,
-    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+    iconName: 'Leaf',
     image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=600&q=80',
   },
 ];
 
 export default function CulturePage() {
+  const [items, setItems] = useState(CULTURE_ITEMS);
+
+  useEffect(() => {
+    fetch('/api/company')
+      .then(res => res.json())
+      .then(json => {
+        if (json.culture && json.culture.length > 0) {
+          const mapped = json.culture.map((c: any) => ({
+            title: c.title,
+            subtitle: c.subtitle || 'Core Value',
+            desc: c.description,
+            iconName: c.icon || 'ShieldCheck',
+            image: c.image_url || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
+          }));
+          setItems(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       <div className="bg-gradient-to-r from-slate-900 to-brand-950 text-white py-14 border-b border-slate-800">
@@ -68,15 +105,16 @@ export default function CulturePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {CULTURE_ITEMS.map((item, i) => {
-            const Icon = item.icon;
+          {items.map((item, i) => {
+            const mappedIcon = ICON_MAP[item.iconName] || { icon: ShieldCheck, color: 'text-brand-700 bg-brand-50 border-brand-200' };
+            const Icon = mappedIcon.icon;
             return (
               <div
                 key={i}
                 className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition p-8 flex flex-col justify-between space-y-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center ${item.color}`}>
+                  <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center ${mappedIcon.color}`}>
                     <Icon className="w-7 h-7" />
                   </div>
                   <div>

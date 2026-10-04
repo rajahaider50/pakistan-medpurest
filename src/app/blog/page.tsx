@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Calendar, Clock, User, ArrowRight, BookOpen } from 'lucide-react';
 
@@ -31,8 +31,31 @@ const BLOG_POSTS = [
 
 export default function BlogPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'problem-guide' | 'product-introduction'>('all');
+  const [posts, setPosts] = useState(BLOG_POSTS);
 
-  const filteredPosts = BLOG_POSTS.filter(
+  useEffect(() => {
+    fetch('/api/blogs')
+      .then(res => res.json())
+      .then(data => {
+        if (data.blogs && data.blogs.length > 0) {
+          const mapped = data.blogs.map((b: any) => ({
+            slug: b.slug,
+            category: b.category || 'problem-guide',
+            categoryName: b.category === 'problem-guide' ? 'Problem Guide' : 'Product Introduction',
+            title: b.title,
+            excerpt: b.excerpt || '',
+            image: b.cover_image || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80',
+            date: b.published_at ? new Date(b.published_at).toLocaleDateString() : 'Recent',
+            author: b.author || 'Clinical Editorial Team',
+            readingTime: b.reading_time || '5 min read',
+          }));
+          setPosts(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredPosts = posts.filter(
     p => activeTab === 'all' || p.category === activeTab
   );
 

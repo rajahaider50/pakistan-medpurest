@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Filter, ArrowRight, Send, CheckCircle2, ChevronRight, Package } from 'lucide-react';
 import InquiryModal from '@/components/InquiryModal';
@@ -83,12 +83,54 @@ const PRODUCTS = [
 ];
 
 export default function ProductsPage() {
+  const [productList, setProductList] = useState(PRODUCTS);
+  const [categoryList, setCategoryList] = useState(CATEGORIES);
   const [selectedCat, setSelectedCat] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
   const [inquiryProduct, setInquiryProduct] = useState('');
 
-  const filteredProducts = PRODUCTS.filter(prod => {
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.products && data.products.length > 0) {
+          const mapped = data.products.map((p: any) => ({
+            name: p.name,
+            slug: p.slug,
+            category: p.med_categories?.slug || p.category_id || 'protective-equipment',
+            categoryName: p.med_categories?.name || 'Medical Supply',
+            sku: p.sku,
+            image: p.primary_image || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80',
+            desc: p.short_description || p.description || '',
+            features: Array.isArray(p.features) ? p.features : [],
+            standard: p.specifications?.['Barrier Standard'] || p.sterilization || 'Medical Grade',
+          }));
+          setProductList(mapped);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.categories && data.categories.length > 0) {
+          const primary = data.categories.filter((c: any) => !c.parent_id);
+          const mappedCats = [
+            { id: 'all', name: 'All Products', count: data.categories.length },
+            ...primary.map((c: any) => ({
+              id: c.slug,
+              name: c.name,
+              count: 0
+            }))
+          ];
+          setCategoryList(mappedCats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredProducts = productList.filter(prod => {
     const matchesCat = selectedCat === 'all' || prod.category === selectedCat;
     const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           prod.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,7 +170,7 @@ export default function ProductsPage() {
                 Categories
               </h3>
               <div className="space-y-1">
-                {CATEGORIES.map(cat => (
+                {categoryList.map(cat => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCat(cat.id)}

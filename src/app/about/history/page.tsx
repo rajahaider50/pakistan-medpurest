@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Calendar, ArrowRight } from 'lucide-react';
 
@@ -33,6 +33,23 @@ const TIMELINE = [
 ];
 
 export default function HistoryPage() {
+  const [timeline, setTimeline] = useState(TIMELINE);
+
+  useEffect(() => {
+    fetch('/api/company')
+      .then(res => res.json())
+      .then(json => {
+        if (json.history && json.history.length > 0) {
+          const mapped = json.history.map((h: any) => ({
+            year: h.year,
+            title: h.title,
+            desc: h.description,
+          }));
+          setTimeline(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       <div className="bg-gradient-to-r from-slate-900 to-brand-950 text-white py-14 border-b border-slate-800">
@@ -61,7 +78,7 @@ export default function HistoryPage() {
         </div>
 
         <div className="relative border-l-2 border-brand-200 ml-4 md:ml-32 space-y-12 py-4">
-          {TIMELINE.map((item, idx) => (
+          {timeline.map((item, idx) => (
             <div key={idx} className="relative pl-8 group">
               {/* Year badge on left */}
               <div className="md:absolute md:-left-36 md:top-0 mb-2 md:mb-0">

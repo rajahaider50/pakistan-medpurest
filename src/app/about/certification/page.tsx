@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Award, ShieldCheck, Download, Eye, X } from 'lucide-react';
 
@@ -48,7 +48,27 @@ const CERTIFICATES = [
 ];
 
 export default function CertificationPage() {
+  const [certs, setCerts] = useState(CERTIFICATES);
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/certificates')
+      .then(res => res.json())
+      .then(data => {
+        if (data.certificates && data.certificates.length > 0) {
+          const mapped = data.certificates.map((c: any) => ({
+            title: c.title,
+            number: c.cert_number || '',
+            authority: c.issuing_authority || 'Accredited Body',
+            validity: c.expiry_date ? `Valid: ${c.expiry_date}` : 'Active Certification',
+            image: c.image_url || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
+            desc: c.description || 'Certified for healthcare manufacturing compliance and international barrier standards.',
+          }));
+          setCerts(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
@@ -78,7 +98,7 @@ export default function CertificationPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CERTIFICATES.map((cert, i) => (
+          {certs.map((cert, i) => (
             <div
               key={i}
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
